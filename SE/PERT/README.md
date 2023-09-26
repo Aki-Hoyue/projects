@@ -1,9 +1,9 @@
 # Report of PERT project
 
-Author: Hoyue
-Blog: https://hoyue.fun
-Blog Posts of the project: https://hoyue.fun/se_pert.html
-The blog post will be automatically published after the deadline.
+Author: Hoyue  
+Blog: https://hoyue.fun  
+Blog Posts of the project: https://hoyue.fun/se_pert.html  
+The blog post will be automatically published after the deadline.  
 
 ## Environment
 
