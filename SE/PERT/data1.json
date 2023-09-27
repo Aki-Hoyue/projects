@@ -1,0 +1,100 @@
+[
+    {
+        "Activity Code": "A",
+        "Immediate Predecessor": [],
+        "Optimistic Estimate": 1,
+        "Most Likely Estimate": 2,
+        "Pessimistic Estimate": 3
+    },
+    {
+        "Activity Code": "B",
+        "Immediate Predecessor": ["A"],
+        "Optimistic Estimate": 2,
+        "Most Likely Estimate": 3.5,
+        "Pessimistic Estimate": 8
+    },
+    {
+        "Activity Code": "C",
+        "Immediate Predecessor": ["B"],
+        "Optimistic Estimate": 6,
+        "Most Likely Estimate": 9,
+        "Pessimistic Estimate": 18
+    },
+    {
+        "Activity Code": "D",
+        "Immediate Predecessor": ["C"],
+        "Optimistic Estimate": 4,
+        "Most Likely Estimate": 5.5,
+        "Pessimistic Estimate": 10
+    },
+    {
+        "Activity Code": "E",
+        "Immediate Predecessor": ["C"],
+        "Optimistic Estimate": 1,
+        "Most Likely Estimate": 4.5,
+        "Pessimistic Estimate": 5
+    },
+    {
+        "Activity Code": "F",
+        "Immediate Predecessor": ["E"],
+        "Optimistic Estimate": 4,
+        "Most Likely Estimate": 4,
+        "Pessimistic Estimate": 10
+    },
+    {
+        "Activity Code": "G",
+        "Immediate Predecessor": ["D"],
+        "Optimistic Estimate": 5,
+        "Most Likely Estimate": 6.5,
+        "Pessimistic Estimate": 11
+    },
+    {
+        "Activity Code": "H",
+        "Immediate Predecessor": ["E", "G"],
+        "Optimistic Estimate": 5,
+        "Most Likely Estimate": 8,
+        "Pessimistic Estimate": 17
+    },
+    {
+        "Activity Code": "I",
+        "Immediate Predecessor": ["C"],
+        "Optimistic Estimate": 3,
+        "Most Likely Estimate": 7.5,
+        "Pessimistic Estimate": 9
+    },
+    {
+        "Activity Code": "J",
+        "Immediate Predecessor": ["F", "I"],
+        "Optimistic Estimate": 3,
+        "Most Likely Estimate": 9,
+        "Pessimistic Estimate": 9
+    },
+    {
+        "Activity Code": "K",
+        "Immediate Predecessor": ["J"],
+        "Optimistic Estimate": 4,
+        "Most Likely Estimate": 4,
+        "Pessimistic Estimate": 4
+    },
+    {
+        "Activity Code": "L",
+        "Immediate Predecessor": ["J"],
+        "Optimistic Estimate": 1,
+        "Most Likely Estimate": 5.5,
+        "Pessimistic Estimate": 7
+    },
+    {
+        "Activity Code": "M",
+        "Immediate Predecessor": ["H"],
+        "Optimistic Estimate": 1,
+        "Most Likely Estimate": 2,
+        "Pessimistic Estimate": 3
+    },
+    {
+        "Activity Code": "N",
+        "Immediate Predecessor": ["K", "L"],
+        "Optimistic Estimate": 5,
+        "Most Likely Estimate": 5.5,
+        "Pessimistic Estimate": 9
+    }
+]
