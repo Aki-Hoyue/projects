@@ -3,7 +3,7 @@ This folder contains my code reproduction of the paper "[Demystifying the underg
 
 ## Author
     - Hoyue
-    - Blog: [https://hoyue.fun](https://hoyue.fun)
+    - Blog: https://hoyue.fun
 
 ## Construction
 
