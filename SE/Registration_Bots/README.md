@@ -37,6 +37,8 @@ This folder contains my code reproduction of the paper "[Demystifying the underg
     Outputs information such as the randomly generated phone number, successful sending of SMS (if applicable), waiting for SMS indication, and displays the received verification code or a timeout message.
 
 ## IP proxy simulator workflow
+[![image.png](https://i.postimg.cc/Y9wSZRwV/image.png)](https://postimg.cc/t12yVhJt)
+
 1. Fetching Proxy IPs:
 
     Scrapes proxy IPs from specified target URLs (http://www.kxdaili.com/dailiip.html, http://www.kxdaili.com/dailiip/2/1.html) using web scraping techniques.
