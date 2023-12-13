@@ -1,7 +1,9 @@
 # Code portion of Project
+This folder contains my code reproduction of the paper "[Demystifying the underground ecosystem of account registration bots](https://doi.org/10.1145/3540250.3549090)" in which registration bots bypass three common human detection services(SMS, CAPTCHA, IP proxy).
+
 ## Author
     - Hoyue
-    - Blog: https://hoyue.fun
+    - Blog: [https://hoyue.fun](https://hoyue.fun)
 
 ## Construction
 
@@ -59,3 +61,8 @@
 5. Output:
 
     Outputs information regarding the proxy IP pool, the selected proxy IP, the status of the POST request (success or failure), and the response content in case of success.
+
+## CAPTCHA Reproduction
+For the reproduction of CAPTCHA recognition, I used a set of "end-to-end" CAPTCHA recognition models trained on CNNs, trained by deep learning plus a large amount of data to simulate the results.
+Model use reference: [https://github.com/dee1024/pytorch-captcha-recognition](https://github.com/dee1024/pytorch-captcha-recognition) and [https://github.com/czczup/Captcha-Recognition](https://github.com/czczup/Captcha-Recognition)
+
