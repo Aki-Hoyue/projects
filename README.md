@@ -1,5 +1,8 @@
-# projects
-Hoyue projects collection
+# Projection
+Author: Hoyue
+Blog: [https://hoyue.fun](https://hoyue.fun)
+
+Hoyue projects collection.
 
 * Software Engineering
   * [PERT graph by Python](https://github.com/Aki-Hoyue/projects/tree/main/SE/PERT)
