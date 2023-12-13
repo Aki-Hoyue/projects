@@ -13,6 +13,8 @@ This folder contains my code reproduction of the paper "[Demystifying the underg
 * `server.py`: This code does a simulates to receive a POST request from the client.py endpoint with a random proxy IP from the proxy IP pool.
 
 ## SMS workflow
+[![image.png](https://i.postimg.cc/HsTyVpRK/image.png)](https://postimg.cc/SjtsPpy7)
+
 1. Fetching Random Phone Number:
 
     Utilizes web scraping techniques to obtain a random phone number from a specific website (https://us-phone-number.com/US-Phone-Number/).
