@@ -1,3 +1,6 @@
+// An improved version of the WRR algorithm with different Totaltime and Arrivaltime support.
+// Author: Hoyue
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
