@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     // Allow user to offer a file or use the default file.
     char *filename;
     if (argc != 2) {
-        filename = "task.txt";
+        filename = "task_opt.txt";
     } else {
         filename = argv[1];
     }
