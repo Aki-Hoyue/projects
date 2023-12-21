@@ -1,3 +1,5 @@
+// The new version supports different Totaltime and Arrivaltime, see WRR_algorithm_opt.c
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -6,31 +8,30 @@
 #include <string.h>
 #include <time.h>
 
-// Define the number of tasks and the RR quantum time.
 #define TASK_ROUND 3
 #define RR_QUANTUM 4
 
 typedef struct task{
-    int taskID;
-    int burstTime[TASK_ROUND + 1];
-    int totalBurstTime[TASK_ROUND + 1];
-    double averageBurstTime[TASK_ROUND + 1];
-    double p;
-    double r;
-    double b;
-    int dmax;
-    double dq;
-    double s;
-    int ro;
-    int priority;
-    double R;
-    double quantumTime;
+	int taskID;
+	int burstTime[TASK_ROUND + 1];
+	int totalBurstTime[TASK_ROUND + 1];
+	double averageBurstTime[TASK_ROUND + 1];
+	double p;
+	double r;
+	double b;
+	int dmax;
+	double dq;
+	double s;
+	int ro;
+	int priority;
+	double R;
+	double quantumTime;
 	bool isFinish;
-	double totalTime;
-	double waitTime;
-	double turnaroundTime;
-	double startTime;
-	double endTime;
+	double total_time;
+	double start_time; //record the time when a task start using the quantum time
+	double end_time; //record the time when a task leave the queue
+	double wait; //record the waiting time of tasks
+	double turnaround; //record the turn around time of tasks
 }Task;
 
 // Define the task list and the index of the list.
@@ -38,7 +39,7 @@ Task *Tasklist;
 int Listindex=0;
 
 void Handle_file(char *filename);
-void Task_initialize(Task* T, int taskID, int burstTime[], double dmax, double ro, int priority);
+void Task_initialize(Task* T, int taskID, int burstTime[], int dmax, int ro, int priority);
 int Parameterize_p(Task* T);
 void Parameterize_r(Task* T, int tp);
 void Parameterize_b(Task* T, int tp);
@@ -47,11 +48,9 @@ void Calculate_delay(Task* T);
 void Calculate_R(Task* T);
 void Calculate_quantumTime(Task* T);
 int cmp(const void *T1, const void *T2);
-void sort_by_priority(Task *T);
+void sort_by_priority(Task *T, int task_num);
 void RR_scheduling(Task* Tasklist);
 void WRR_scheduling(Task* Tasklist);
-void TaskRun(Task *T, double *clock, double *waitTime_increment);
-void WRR_scheduling_edited();
 
 int main(int argc, char *argv[])
 {
@@ -68,7 +67,7 @@ int main(int argc, char *argv[])
 	RR_scheduling(Tasklist);
 	Handle_file(filename);
 	WRR_scheduling(Tasklist);
-    //WRR_scheduling_edited();
+    
     return 0;
 }
 
@@ -101,9 +100,8 @@ void Handle_file(char *filename)
 			fscanf(fp, "%d", &burstTime[j]);
 		}
 		
-		double dmax, ro;
-		int priority;
-		fscanf(fp, "%lf %lf %d", &dmax, &ro, &priority);
+		int dmax, ro, priority;
+		fscanf(fp, "%d %d %d", &dmax, &ro, &priority);
 		
 		Task_initialize(&Tasklist[i], taskID, burstTime, dmax, ro, priority);
 	}
@@ -111,7 +109,7 @@ void Handle_file(char *filename)
 	fclose(fp);
 }
 
-void Task_initialize(Task* T, int taskID, int burstTime[], double dmax, double ro, int priority)
+void Task_initialize(Task* T, int taskID, int burstTime[], int dmax, int ro, int priority)
 {
 	T->taskID = taskID;
 	
@@ -135,24 +133,13 @@ void Task_initialize(Task* T, int taskID, int burstTime[], double dmax, double r
 	T->s = 0;
 	T->R = 0;
 	T->quantumTime = 0;
-	T->totalTime = 30.00;
+	T->total_time = 30.00;
 	T->isFinish = false;
-	T->waitTime = 0.00;
-	T->turnaroundTime = 0.00;
-	T->startTime = 0.00;
-	T->endTime = 0.00;
 	
 	Parameterize(T);
 	Calculate_quantumTime(T);
-	printf("Task%d\n", T->taskID);
-	printf("p = %lf\n", T->p);
-	printf("r = %lf\n", T->r);
-	printf("b = %lf\n", T->b);
-	printf("dmax = %d\n", T->dmax);
-	printf("dq = %lf\n", T->dq);
-	printf("s = %lf\n", T->s);
-	printf("R = %lf\n", T->R);
-	printf("QuntumTime = %lf\n", T->quantumTime);
+	
+	printf("Task %d: quntumTime = %lf\n", T->taskID, T->quantumTime);
 }
 
 int Parameterize_p(Task* T)
@@ -229,6 +216,11 @@ void Calculate_quantumTime(Task* T)
 	T->quantumTime = T->R * T->ro;
 }
 
+/*
+	Written by Jacky Huo
+*/
+
+
 int cmp(const void *T1, const void *T2) {
 	Task *task1 = (Task *)T1;
 	Task *task2 = (Task *)T2;
@@ -251,14 +243,11 @@ int cmp(const void *T1, const void *T2) {
 	}
 }
 
-/*
-	Written by Jacky Huo
-*/
-
-void sort_by_priority(Task *T) {
-	qsort(&T[1], Listindex, sizeof(T[1]), cmp);
+void sort_by_priority(Task *T, int task_num) //sort tasks with priority, higher priority first(using qsort)
+{
+	qsort(&T[1], task_num, sizeof(T[1]), cmp);
 	
-	for(int i=1; i<=Listindex; i++)
+	for(int i=1; i<=task_num; i++)
 	{
 		printf("Task%d, priority:%d\n", T[i].taskID, T[i].priority);
 	}
@@ -269,35 +258,35 @@ void RR_scheduling(Task *T) //static quantum time(initialized 4)
 	printf("RR\n");
 	printf("number of tasks:%d\n", Listindex);
 	int start = 1; //task id start from 1
-	sort_by_priority(Tasklist);
+	sort_by_priority(Tasklist, Listindex);
 	
 	while(1)
 	{	
 		for(int i=start; i<=Listindex; i++)
 		{
-			if(T[i].totalTime > RR_QUANTUM)
+			if(T[i].total_time > RR_QUANTUM)
 			{
-				T[i].totalTime -= RR_QUANTUM;
+				T[i].total_time -= RR_QUANTUM;
 				
-				if(T[i].startTime > T[i].endTime) //skip the first round
-					T[i].waitTime += (T[i].startTime - T[i].endTime); 
-				T[i].endTime = T[i].startTime + RR_QUANTUM; 
-				T[i+1].startTime = T[i].endTime; //start time of next task is the end time of last task
+				if(T[i].start_time > T[i].end_time) //skip the first round
+					T[i].wait += (T[i].start_time - T[i].end_time); 
+				T[i].end_time = T[i].start_time + RR_QUANTUM; 
+				T[i+1].start_time = T[i].end_time; //start time of next task is the end time of last task
 				if(i==Listindex) //new turn
-					T[start].startTime = T[i].endTime;
+					T[start].start_time = T[i].end_time;
 			}
 			
 			else
 			{
-				if(T[i].startTime > T[i].endTime) //skip the first round
-					T[i].waitTime += (T[i].startTime - T[i].endTime); 
-				T[i].endTime = T[i].startTime + RR_QUANTUM; 
-				T[i+1].startTime = T[i].endTime; //start time of next task is the end time of last task
+				if(T[i].start_time > T[i].end_time) //skip the first round
+					T[i].wait += (T[i].start_time - T[i].end_time); 
+				T[i].end_time = T[i].start_time + T[i].total_time; 
+				T[i+1].start_time = T[i].end_time; //start time of next task is the end time of last task
 				if(i==Listindex) //new turn
-					T[start].startTime = T[i].endTime;
-				T[i].turnaroundTime = T[i].endTime;
+					T[start].start_time = T[i].end_time;
+				T[i].turnaround = T[i].end_time;
 				
-				Tasklist[i].totalTime = 0;
+				Tasklist[i].total_time = 0;
 				Tasklist[i].isFinish = true;
 				start = i+1; 
 				/* if the task is finished, start from the next(supposed all tasks have same total time).
@@ -306,7 +295,7 @@ void RR_scheduling(Task *T) //static quantum time(initialized 4)
 				 */
 			}
 			
-			printf("Tasks %d is executed, priority: %d, quantum time: %f, time left: %f, start time:%f, end time:%f, wait time:%f\n", T[i].taskID, T[i].priority, T[i].quantumTime, T[i].totalTime, T[i].startTime, T[i].endTime, T[i].waitTime);
+			printf("Tasks %d is executed, priority: %d, quantum time: %f, time left: %f, start time:%f, end time:%f, wait time:%f\n", T[i].taskID, T[i].priority, T[i].quantumTime, T[i].total_time, T[i].start_time, T[i].end_time, T[i].wait);
 		}
 		
 		printf("\n");
@@ -316,7 +305,7 @@ void RR_scheduling(Task *T) //static quantum time(initialized 4)
 	}
 	
 	for(int i=1; i<=Listindex; i++)
-		printf("Tasks %d with priority %d: waiting time is %f, turn around time is %f\n", T[i].taskID, T[i].priority, T[i].waitTime, T[i].turnaroundTime);
+		printf("Tasks %d with priority %d: waiting time is %f, turn around time is %f\n", T[i].taskID, T[i].priority, T[i].wait, T[i].turnaround);
 }
 
 void WRR_scheduling(Task *T) //Use the same executing order as RR to precisely compare the impact of dynamic quantum time
@@ -324,35 +313,35 @@ void WRR_scheduling(Task *T) //Use the same executing order as RR to precisely c
 	printf("WRR\n");
 	printf("number of tasks:%d\n", Listindex);
 	int start = 1;
-	sort_by_priority(T);
+	sort_by_priority(T, Listindex);
 	
 	while(1)
 	{	
 		for(int i=start; i<=Listindex; i++)
 		{
-			if(T[i].totalTime > T[i].quantumTime)
+			if(T[i].total_time > T[i].quantumTime)
 			{
-				T[i].totalTime -= T[i].quantumTime;
+				T[i].total_time -= T[i].quantumTime;
 				
-				if(T[i].startTime > T[i].endTime) //skip the first round
-					T[i].waitTime += (T[i].startTime - T[i].endTime); 
-				T[i].endTime = T[i].startTime + T[i].quantumTime; 
-				T[i+1].startTime = T[i].endTime; //start time of next task is the end time of last task
+				if(T[i].start_time > T[i].end_time) //skip the first round
+					T[i].wait += (T[i].start_time - T[i].end_time); 
+				T[i].end_time = T[i].start_time + T[i].quantumTime; 
+				T[i+1].start_time = T[i].end_time; //start time of next task is the end time of last task
 				if(i==Listindex) //new turn
-					T[start].startTime = T[i].endTime;
+					T[start].start_time = T[i].end_time;
 			}
 			
 			else
 			{
-				if(T[i].startTime > T[i].endTime) //skip the first round
-					T[i].waitTime += (T[i].startTime - T[i].endTime); 
-				T[i].endTime = T[i].startTime + T[i].quantumTime; 
-				T[i+1].startTime = T[i].endTime; //start time of next task is the end time of last task
+				if(T[i].start_time > T[i].end_time) //skip the first round
+					T[i].wait += (T[i].start_time - T[i].end_time); 
+				T[i].end_time = T[i].start_time + T[i].total_time; 
+				T[i+1].start_time = T[i].end_time; //start time of next task is the end time of last task
 				if(i==Listindex) //new turn
-					T[start].startTime = T[i].endTime;
-				T[i].turnaroundTime = T[i].endTime;
+					T[start].start_time = T[i].end_time;
+				T[i].turnaround = T[i].end_time;
 				
-				Tasklist[i].totalTime = 0;
+				Tasklist[i].total_time = 0;
 				Tasklist[i].isFinish = true;
 				start = i+1; 
 				/* if the task is finished, strat from the next(supposed all tasks have same total time).
@@ -361,7 +350,7 @@ void WRR_scheduling(Task *T) //Use the same executing order as RR to precisely c
 				*/
 			}
 			
-			printf("Tasks %d is executed, priority: %d, quantum time: %f, time left: %f, start time:%f, end time:%f, wait time:%f\n", T[i].taskID, T[i].priority, T[i].quantumTime, T[i].totalTime, T[i].startTime, T[i].endTime, T[i].waitTime);
+			printf("Tasks %d is executed, priority: %d, quantum time: %f, time left: %f, start time:%f, end time:%f, wait time:%f\n", T[i].taskID, T[i].priority, T[i].quantumTime, T[i].total_time, T[i].start_time, T[i].end_time, T[i].wait);
 			
 		}
 		printf("\n");
@@ -371,82 +360,7 @@ void WRR_scheduling(Task *T) //Use the same executing order as RR to precisely c
 	}
 	
 	for(int i=1; i<=Listindex; i++)
-		printf("Tasks %d with priority %d: waiting time is %f, turn around time is %f\n", T[i].taskID, T[i].priority, T[i].waitTime, T[i].turnaroundTime);
+		printf("Tasks %d with priority %d: waiting time is %f, turn around time is %f\n", T[i].taskID, T[i].priority, T[i].wait, T[i].turnaround);
 }
 
-
-/*
-	Edited by Hoyue. Using different style to complete the algorithm.
-*/
-void WRR_scheduling_edited()
-{
-	printf("WRR EDITED\n");
-	sort_by_priority(Tasklist);
-
-	// Initialize the clock.
-	double clock = 0.00;
-
-	// Start the scheduling.
-	while(true){
-		// Check if all tasks are finished. This is a counter, if all tasks are finished, it will be equal to Listindex.
-		int isAllFinish = 0;
-
-		for (int i=1;i<=Listindex;i++)
-		{
-			// Set the waiting time increment to 0.00.
-			double waitTime = 0.00;
-			TaskRun(&Tasklist[i], &clock, &waitTime);
-
-			// Update the waiting time of other tasks.
-			for (int j=1;j<=Listindex;j++)
-			{
-				if(i != j && Tasklist[j].isFinish == false)
-					Tasklist[j].waitTime += waitTime;
-			}
-
-			// Check if the task is finished.
-			if (Tasklist[i].isFinish == true)
-			{
-				isAllFinish++;
-			}
-
-			printf("Task%d is executed, priority: %d, quantum time: %lf, time left: %lf, wait time:%lf, present time:%lf\n", Tasklist[i].taskID, Tasklist[i].priority, Tasklist[i].quantumTime, Tasklist[i].totalTime, Tasklist[i].waitTime, clock);
-		}
-		printf("\n");
-
-		if (isAllFinish == Listindex)
-		{
-			break;
-		}
-	}
-
-	printf("All tasks are finished\n");
-	for(int i=1; i<=Listindex; i++)
-		printf("Tasks %d with priority %d: waiting time is %f, turn around time is %f\n", Tasklist[i].taskID, Tasklist[i].priority, Tasklist[i].waitTime, Tasklist[i].turnaroundTime);
-}
-
-void TaskRun(Task *T, double *clock, double *waitTime_increment)
-{
-	// Check if the task is finished.
-	if(T->isFinish)
-	{
-		return;
-	}
-
-	// Executed and calculate the cost.
-	if(T->totalTime > T->quantumTime)    //task is not finished yet
-	{
-		T->totalTime -= T->quantumTime;
-		*clock += T->quantumTime;    //clock adds the quantum time
-		*waitTime_increment = T->quantumTime;    //wait time increment is the quantum time
-	}
-	else    //task will finish
-	{
-		T->isFinish = true;
-		*clock += T->totalTime;    //clock adds the time left
-		T->turnaroundTime = *clock;    //turn around time is the present time
-		*waitTime_increment = T->totalTime;    //wait time increment is the time left
-	}
-	
-}
 
